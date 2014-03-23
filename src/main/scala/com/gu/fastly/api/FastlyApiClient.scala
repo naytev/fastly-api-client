@@ -9,7 +9,7 @@ import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 // TODO vclDeleteAll
-// TODO vclUpdate and vclUpload to return Future[List[Response]] - ExecutionContext!
+// TODO vclUpdate and vclUpload to take an ExecutionContext!
 // TODO Java Docs
 
 // http://docs.fastly.com/api
