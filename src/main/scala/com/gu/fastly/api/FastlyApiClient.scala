@@ -8,7 +8,6 @@ import com.ning.http.client.{AsyncHttpClient, Response, AsyncHttpClientConfig}
 import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnectionsPool}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// TODO remove code that passes 'commonHeaders' around
 // TODO vclDeleteAll
 // TODO vclUpdate and vclUpload to return Future[List[Response]] - ExecutionContext!
 // TODO Java Docs
