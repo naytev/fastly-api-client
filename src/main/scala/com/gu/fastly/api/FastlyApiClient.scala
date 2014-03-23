@@ -1,13 +1,15 @@
 package com.gu.fastly.api
 
-import com.ning.http.client._
+import scala.concurrent.Future
 import org.joda.time.DateTime
-import scala.concurrent.{Promise, Future}
 import scala.language.implicitConversions
-import scala.util.Success
+import dispatch._
+import com.ning.http.client.{AsyncHttpClient, Response, AsyncHttpClientConfig}
+import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnectionsPool}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 // http://docs.fastly.com/api
-case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None, proxyServer: Option[ProxyServer] = None) {
+case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None) {
 
   private val fastlyApiUrl = "https://api.fastly.com"
   private val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
@@ -164,66 +166,46 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
   def closeConnectionPool() = AsyncHttpExecutor.close()
 
   private object AsyncHttpExecutor {
+    private lazy val client = {
+      val conf = config getOrElse new AsyncHttpClientConfig.Builder()
+        .setAllowPoolingConnection(true)
+        .setMaximumConnectionsTotal(50)
+        .setMaxRequestRetry(3)
+        .setRequestTimeoutInMs(20000)
+        .build()
 
-    private lazy val defaultConfig = new AsyncHttpClientConfig.Builder()
-      .setAllowPoolingConnection(true)
-      .setMaximumConnectionsTotal(50)
-      .setMaxRequestRetry(3)
-      .setRequestTimeoutInMs(20000)
-      .build()
+      val connectionPool = new NettyConnectionsPool(new NettyAsyncHttpProvider(conf))
+      new AsyncHttpClient(new AsyncHttpClientConfig.Builder(conf).setConnectionsPool(connectionPool).build)
+    }
 
-    private lazy val client = new AsyncHttpClient(config.getOrElse(defaultConfig))
+    private lazy val Http = dispatch.Http(client)
 
-    def close() = client.close()
+    def close() = Http.client.close()
 
     def execute(apiUrl: String,
                 method: HttpMethod = GET,
-                headers: Map[String, String] = Map.empty,
-                parameters: Map[String, String] = Map.empty) : Future[Response] = {
-      val request = method match {
-        case POST => client.preparePost(apiUrl)
-        case PUT => client.preparePut(apiUrl)
-        case DELETE => client.prepareDelete(apiUrl)
-        case GET => client.prepareGet(apiUrl)
-      }
-      build(request, headers, parameters)
-
-      proxyServer.map(request.setProxyServer(_))
-
-      val p = Promise[Response]()
-      val handler = new AsyncCompletionHandler[Unit] {
-        def onCompleted(response: Response) = p.complete(Success(response))
-      }
-      request.execute(handler)
-      p.future
-    }
-
-    private def build(request: AsyncHttpClient#BoundRequestBuilder, headers: Map[String, String], parameters: Map[String, String] = Map.empty) = {
-
-      implicit def mapToFluentCaseInsensitiveStringsMap(headers: Map[String, String]): FluentCaseInsensitiveStringsMap = {
-        val fluentCaseInsensitiveStringsMap = new FluentCaseInsensitiveStringsMap()
-        headers.foreach({
-          case (name: String, value: String) => fluentCaseInsensitiveStringsMap.add(name, value)
-        })
-        fluentCaseInsensitiveStringsMap
+                headers: Map[String, String] = Map(),
+                parameters: Map[String, String] = Map()): Future[Response] = {
+      val withHeaders = headers.foldLeft(url(apiUrl)) {
+        case (url, (k, v)) => url.addHeader(k, v)
       }
 
-      implicit def mapToFluentStringsMap(parameters: Map[String, String]): FluentStringsMap = {
-        val fluentStringsMap = new FluentStringsMap()
-        parameters.foreach({
-          case (name: String, value: String) => fluentStringsMap.add(name, value)
-        })
-        fluentStringsMap
+      val withParameters = if (method == GET) {
+        withHeaders <<? parameters
+      } else parameters.foldLeft(withHeaders) {
+        case (req, (k, v)) => req.addParameter(k, v)
       }
 
-      request.setHeaders(headers)
-
-      request.build().getMethod match {
-        case "GET" => request.setQueryParameters(parameters)
-        case _ => request.setParameters(parameters)
+      val req = method match {
+        case GET => withParameters.GET
+        case POST => withParameters.POST
+        case PUT => withParameters.PUT
+        case DELETE => withParameters.DELETE
       }
 
-      headers.get("Host").map(h => request.setVirtualHost(h))
+      headers.get("Host").foreach(req.setVirtualHost)
+
+      Http(req OK as.Response(identity))
     }
   }
 }

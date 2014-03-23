@@ -11,43 +11,35 @@ An asynchronous Scala client for [Fastly's API](http://docs.fastly.com/api) used
 
 ### SBT
 
-    libraryDependencies += "com.gu" %% "fastly-api-client" % "0.2.0"
+    libraryDependencies += "com.gu" %% "fastly-api-client" % "0.2.1"
 
 ### Maven
    
     <dependency>
         <groupId>com.gu</groupId>
         <artifactId>fastly-api-client_2.10</artifactId>
-        <version>0.2.0</version>
+        <version>0.2.1</version>
     </dependency>
 
 
 ## Configuring the client
 
-Use the default AsyncHttpClientConfig,
+This client uses the [Dispatch Core](http://dispatch.databinder.net/Dispatch.html).
+
+Use the defaults,
 
     val client = FastlyApiClient("my-fastly-api-key", "my-service-id")
 
-Or define your own AsyncHttpClientConfig,
+Or define your own AsyncHttpClientConfig which will be handed to the underlying Dispatch implementation,
 
     val client = FastlyApiClient("my-fastly-api-key",
                     "my-service-id",
                     config = Some(asyncHttpClientConfig))
 
-This client uses the [HTTP Async Client](https://github.com/AsyncHttpClient/async-http-client), have a look there for configuring your own AsyncHttpClientConfig. This is what [Dispatch Reboot](https://github.com/dispatch/reboot) uses under the hood, too.
-
-Set a proxy if needed,
-
-    val client = FastlyApiClient("my-fastly-api-key",
-                    "my-service-id",
-                    proxy = Some(proxyToAccessTheWorld))
-
 
 ## Asynchronous calls
 
 All methods return a scala.concurrent.Future[Response]
-
-If you want to block, you must use the Await.result construct.
 
 ## Examples
 
