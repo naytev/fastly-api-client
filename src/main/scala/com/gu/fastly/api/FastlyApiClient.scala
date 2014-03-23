@@ -40,8 +40,8 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     Future.sequence(f)
   }
 
-  def vclUpdate(version: Int, vcl: Map[String, String]): List[Future[Response]] = {
-    vcl.map({
+  def vclUpdate(version: Int, vcl: Map[String, String]): Future[List[Response]] = {
+    val f = vcl.map {
       case (fileName, fileAsString) => {
         val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$fileName"
         AsyncHttpExecutor.execute(
@@ -51,7 +51,8 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
           parameters = Map("content" -> fileAsString, "name" -> fileName)
         )
       }
-    }).toList
+    }.toList
+    Future.sequence(f)
   }
 
   def purge(url: String, extraHeaders: Map[String, String] = Map.empty): Future[Response] = {
