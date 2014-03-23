@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None) {
 
   private val fastlyApiUrl = "https://api.fastly.com"
+  private lazy val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
 
   sealed trait HttpMethod
   object GET extends HttpMethod
@@ -176,8 +177,6 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
   def closeConnectionPool() = AsyncHttpExecutor.close()
 
   private object AsyncHttpExecutor {
-
-    private lazy val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
 
     private lazy val Http = {
       val conf = config getOrElse new AsyncHttpClientConfig.Builder()
