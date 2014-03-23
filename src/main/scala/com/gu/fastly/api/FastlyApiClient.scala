@@ -2,7 +2,6 @@ package com.gu.fastly.api
 
 import scala.concurrent.Future
 import org.joda.time.DateTime
-import scala.language.implicitConversions
 import dispatch._
 import com.ning.http.client.{AsyncHttpClient, Response, AsyncHttpClientConfig}
 import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnectionsPool}
