@@ -2,19 +2,32 @@ name := "fastly-api-client"
 
 organization := "com.gu"
 
-version := "0.2.0"
+version := "0.2.1"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.4"
 
 libraryDependencies ++= Seq(
-    "com.ning" % "async-http-client" % "1.7.22",
-    "joda-time" % "joda-time" % "2.0",
-    "org.joda" % "joda-convert" % "1.2",
-    "org.scalatest" %% "scalatest" % "1.9.1" % "test",
-    "com.typesafe" % "config" % "1.0.2" % "test"
+    "com.ning" % "async-http-client" % "1.8.4",
+    "joda-time" % "joda-time" % "2.3",
+    "org.joda" % "joda-convert" % "1.6",
+    "org.scalatest" %% "scalatest" % "2.1.2" % "test",
+    "com.typesafe" % "config" % "1.2.0" % "test"
 )
 
-scalacOptions in ThisBuild ++= Seq("-deprecation", "-feature", "-language:postfixOps")
+scalacOptions in ThisBuild ++= Seq(
+	"-deprecation",
+	"-encoding", "UTF8",
+	"–explaintypes",
+	"-feature",
+	"–optimise",
+	"-unchecked",
+	"–Xcheck-null",
+	"–Xcheckinit",
+	"–Xlog-implicits",
+	"–Xlint",
+  "-Xfatal-warnings", // Fail the compilation if there are any warnings.
+	"-language:postfixOps"
+)
 
 publishMavenStyle := true
 
@@ -51,4 +64,3 @@ pomExtra := (
     </developer>
   </developers>
 )
-
