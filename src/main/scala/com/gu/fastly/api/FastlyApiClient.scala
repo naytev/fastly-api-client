@@ -163,12 +163,12 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     *
     * @param version the version number
     * @param id an identifier for the backend
-    * @param address the domain of the backend
+    * @param ipv4 the domain or IP of the backend
     * @param port the port of the backend
     */
-  def backendCreate(version: Int, id: String, address: String, port: Int): Future[Response] = {
+  def backendCreate(version: Int, id: String, ipv4: String, port: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/backend"
-    val params = Map("ipv4" -> address, "version" -> version.toString, "id" -> id, "port" -> port.toString, "service" -> serviceId)
+    val params = Map("ipv4" -> ipv4, "version" -> version.toString, "id" -> id, "port" -> port.toString, "service" -> serviceId)
     HttpExecutor.execute(apiUrl, POST, parameters = params)
   }
 
@@ -240,7 +240,7 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     HttpExecutor.execute(apiUrl, parameters = params)
   }
 
-  /** Fetches the specified field from the historical stats for a given service, http://docs.fastly.com/api/stats#Ref
+  /** Fetches the specified field from the stats API for a given service, http://docs.fastly.com/api/stats#Ref
    *
    * @param from
    * @param to
