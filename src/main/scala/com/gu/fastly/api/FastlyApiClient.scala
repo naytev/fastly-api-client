@@ -18,11 +18,11 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
   private lazy val fastlyApiUrl = "https://api.fastly.com"
   private lazy val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
 
-  sealed trait HttpMethod
-  object GET extends HttpMethod
-  object POST extends HttpMethod
-  object PUT extends HttpMethod
-  object DELETE extends HttpMethod
+  private sealed trait HttpMethod
+  private object GET extends HttpMethod
+  private object POST extends HttpMethod
+  private object PUT extends HttpMethod
+  private object DELETE extends HttpMethod
 
   /** Uploads new vcl files for a given version
     *
@@ -156,7 +156,7 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     HttpExecutor.execute(apiUrl)
   }
 
-  /** Creates a backends
+  /** Creates a backend
     *
     * @param version the version number
     * @param id an identifier for the backend

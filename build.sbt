@@ -29,6 +29,9 @@ scalacOptions in ThisBuild ++= Seq(
   "-language:postfixOps"
 )
 
+// http://www.scala-sbt.org/release/docs/Howto/scaladoc.html
+scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
+
 publishMavenStyle := true
 
 publishTo in ThisBuild <<= version {
