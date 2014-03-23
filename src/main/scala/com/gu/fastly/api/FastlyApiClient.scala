@@ -11,7 +11,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 // TODO remove code that passes 'commonHeaders' around
 // TODO vclDeleteAll
 // TODO vclUpdate and vclUpload to return Future[List[Response]] - ExecutionContext!
-// TODO remove extraHeaders from purge method
 // TODO Java Docs
 
 // http://docs.fastly.com/api
@@ -55,10 +54,10 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     Future.sequence(f)
   }
 
-  def purge(url: String, extraHeaders: Map[String, String] = Map.empty): Future[Response] = {
+  def purge(url: String): Future[Response] = {
     val urlWithoutPrefix = url.stripPrefix("http://").stripPrefix("https://")
     val apiUrl = s"$fastlyApiUrl/purge/$urlWithoutPrefix"
-    AsyncHttpExecutor.execute(apiUrl, POST, headers = Map("X-Fastly-Key" -> apiKey) ++ extraHeaders)
+    AsyncHttpExecutor.execute(apiUrl, POST, headers = Map("X-Fastly-Key" -> apiKey))
   }
 
   def versionCreate(): Future[Response] = {
