@@ -7,7 +7,6 @@ import com.ning.http.client.{AsyncHttpClient, Response, AsyncHttpClientConfig}
 import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnectionsPool}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// TODO vclDeleteAll
 // TODO vclUpdate and vclUpload to take an ExecutionContext!
 
 /** An asynchronous Scala client for Fastly's API used to deploy and update configs, de-cache objects and query the stats API, http://docs.fastly.com/api
@@ -139,11 +138,16 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
   /** Deletes a VCL files for a version
     *
     * @param version the version number
-    * @param name the name of the VCL file to delete
+    * @param names the names of the VCL files to delete
     */
-  def vclDelete(version: Int, name: String): Future[Response] = {
-    val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$name"
-    HttpExecutor.execute(apiUrl, DELETE)
+  def vclDelete(version: Int, names: Seq[String]): Future[List[Response]] = {
+
+    val f = names.map { name =>
+      val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$name"
+      HttpExecutor.execute(apiUrl, DELETE)
+    }.toList
+
+    Future.sequence(f)
   }
 
   /** Shows the health of the service's backends
