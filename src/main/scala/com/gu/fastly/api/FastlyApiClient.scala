@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 // http://docs.fastly.com/api
 case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None) {
 
-  private val fastlyApiUrl = "https://api.fastly.com"
+  private lazy val fastlyApiUrl = "https://api.fastly.com"
   private lazy val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
 
   sealed trait HttpMethod
@@ -28,7 +28,7 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     val f = vcl.map {
       case (fileName, fileAsString) => {
         val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl"
-        AsyncHttpExecutor.execute(
+        HttpExecutor.execute(
           apiUrl,
           POST,
           headers = Map("Content-Type" -> "application/x-www-form-urlencoded"),
@@ -43,7 +43,7 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     val f = vcl.map {
       case (fileName, fileAsString) => {
         val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$fileName"
-        AsyncHttpExecutor.execute(
+        HttpExecutor.execute(
           apiUrl,
           PUT,
           headers = Map("Content-Type" -> "application/x-www-form-urlencoded"),
@@ -57,116 +57,116 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
   def purge(url: String): Future[Response] = {
     val urlWithoutPrefix = url.stripPrefix("http://").stripPrefix("https://")
     val apiUrl = s"$fastlyApiUrl/purge/$urlWithoutPrefix"
-    AsyncHttpExecutor.execute(apiUrl, POST, headers = Map("X-Fastly-Key" -> apiKey))
+    HttpExecutor.execute(apiUrl, POST, headers = Map("X-Fastly-Key" -> apiKey))
   }
 
   def versionCreate(): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version"
-    AsyncHttpExecutor.execute(apiUrl, PUT)
+    HttpExecutor.execute(apiUrl, PUT)
   }
 
   def versionList(): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   def versionActivate(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/activate"
-    AsyncHttpExecutor.execute(apiUrl, PUT)
+    HttpExecutor.execute(apiUrl, PUT)
   }
 
   def versionClone(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/clone"
-    AsyncHttpExecutor.execute(apiUrl, PUT, headers = Map("Content-Type" -> "application/x-www-form-urlencoded"))
+    HttpExecutor.execute(apiUrl, PUT, headers = Map("Content-Type" -> "application/x-www-form-urlencoded"))
   }
 
   def versionValidate(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/validate"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   def vclSetAsMain(version: Int, name: String): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$name/main"
-    AsyncHttpExecutor.execute(apiUrl, PUT)
+    HttpExecutor.execute(apiUrl, PUT)
   }
 
   def vclList(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   def vclDelete(version: Int, name: String): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/vcl/$name"
-    AsyncHttpExecutor.execute(apiUrl, DELETE)
+    HttpExecutor.execute(apiUrl, DELETE)
   }
 
   def backendCheckAll(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/backend/check_all"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   // TODO what is this ipv4?
   def backendCreate(version: Int, id: String, address: String, port: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/backend"
     val params = Map("ipv4" -> address, "version" -> version.toString, "id" -> id, "port" -> port.toString, "service" -> serviceId)
-    AsyncHttpExecutor.execute(apiUrl, POST, parameters = params)
+    HttpExecutor.execute(apiUrl, POST, parameters = params)
   }
 
   def backendList(version: Int): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service/$serviceId/version/$version/backend"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   def serviceList(): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/service"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   def stats(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsWithFieldFilter(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all, field: String): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/field/$field"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsAggregate(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/aggregate"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsForService(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all, serviceId: String): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/service/$serviceId"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsForServiceWithFieldFilter(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all, serviceId: String, field: String): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/service/$serviceId/field/$field"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsUsage(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/usage"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsUsageGroupedByService(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/usage_by_service"
     val params = statsParams(from, to, by, region)
-    AsyncHttpExecutor.execute(apiUrl, parameters = params)
+    HttpExecutor.execute(apiUrl, parameters = params)
   }
 
   def statsRegions(): Future[Response] = {
     val apiUrl = s"$fastlyApiUrl/stats/regions"
-    AsyncHttpExecutor.execute(apiUrl)
+    HttpExecutor.execute(apiUrl)
   }
 
   private def statsParams(from: DateTime, to: DateTime, by: By.Value, region: Region.Value = Region.all): Map[String, String] = {
@@ -174,9 +174,9 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     Map[String, String]("from" -> millis(from), "to" -> millis(to), "by" -> by.toString, "region" -> region.toString)
   }
 
-  def closeConnectionPool() = AsyncHttpExecutor.close()
+  def closeConnectionPool() = HttpExecutor.close()
 
-  private object AsyncHttpExecutor {
+  private object HttpExecutor {
 
     private lazy val Http = {
       val conf = config getOrElse new AsyncHttpClientConfig.Builder()
