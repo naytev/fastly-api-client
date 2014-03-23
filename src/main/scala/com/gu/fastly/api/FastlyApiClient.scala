@@ -1,13 +1,10 @@
 package com.gu.fastly.api
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import org.joda.time.DateTime
 import dispatch._
 import com.ning.http.client.{AsyncHttpClient, Response, AsyncHttpClientConfig}
 import com.ning.http.client.providers.netty.{NettyAsyncHttpProvider, NettyConnectionsPool}
-import scala.concurrent.ExecutionContext.Implicits.global
-
-// TODO vclUpdate and vclUpload to take an ExecutionContext!
 
 /** An asynchronous Scala client for Fastly's API used to deploy and update configs, de-cache objects and query the stats API, http://docs.fastly.com/api
   *
@@ -16,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @param serviceId serviceId
   * @param config a custom AsyncHttpClientConfig for configuring the behaviour (timeouts etc) of the Dispatch HTTP library
   */
-case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None) {
+case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[AsyncHttpClientConfig] = None)(implicit value: ExecutionContext) {
 
   private lazy val fastlyApiUrl = "https://api.fastly.com"
   private lazy val commonHeaders = Map("X-Fastly-Key" -> apiKey, "Accept" -> "application/json")
@@ -314,7 +311,7 @@ case class FastlyApiClient(apiKey: String, serviceId: String, config: Option[Asy
     def execute(apiUrl: String,
                 method: HttpMethod = GET,
                 headers: Map[String, String] = commonHeaders,
-                parameters: Map[String, String] = Map()): Future[Response] = {
+                parameters: Map[String, String] = Map.empty): Future[Response] = {
       val withHeaders = headers.foldLeft(url(apiUrl)) {
         case (url, (k, v)) => url.addHeader(k, v)
       }

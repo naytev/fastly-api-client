@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class FastlyApiClientTest extends FeatureSpec with Matchers {
 
